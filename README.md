@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-10%2F10%20passing-brightgreen.svg)](examples/)
+[![Tests](https://img.shields.io/badge/tests-13%2F13%20passing-brightgreen.svg)](examples/)
 [![GitHub](https://img.shields.io/badge/GitHub-Kaynat-blue?logo=github)](https://github.com/Mohammad-Faiz-Cloud-Engineer/Kaynat)
 
 ### *Named Kaynat. Built in silence. Meant to speak.*
@@ -120,10 +120,17 @@ That's it.
 - ✅ Lists and operations
 - ✅ Interactive REPL to test things
 - ✅ Actually Turing complete
-- ✅ Standard library (math, strings, files, crypto, JSON, more)
-- ✅ Data structures (stacks, queues, trees, graphs, heaps, tries)
-- ✅ Object-oriented programming
-- ✅ GUI system
+- ✅ **Standard library - FULLY INTEGRATED** (99 functions across 10 modules)
+  - Math tools (20 functions): sqrt, pow, factorial, trig, etc.
+  - String tools (20 functions): uppercase, split, replace, etc.
+  - List tools (20 functions): sort, filter, min, max, etc.
+  - File tools (12 functions): read, write, copy, move, etc.
+  - Date tools (5 functions): current date/time, formatting
+  - Random tools (6 functions): integers, floats, choices, shuffle
+  - Network tools (2 functions): fetch URLs, check reachability
+  - JSON tools (3 functions): parse, generate, format
+  - Crypto tools (5 functions): SHA256, MD5, base64, tokens
+  - Pattern tools (6 functions): regex matching, validation
 
 ---
 
@@ -157,6 +164,33 @@ define a function called greet that takes name.
 end.
 
 call greet with world.
+
+# Standard Library
+call sqrt with 16 and store as result.
+say Square root is, result.
+```
+
+---
+
+## Standard Library Examples
+
+```kaynat
+# Math operations
+call sqrt with 16 and store as result.
+say result.
+
+# String manipulation
+call uppercase with hello and store as upper.
+say upper.
+
+# List operations
+set numbers to a list containing 5, 2, 8, 1, 9.
+call sort with numbers and store as sorted.
+say sorted.
+
+# File operations
+call read_file with data.txt and store as content.
+say content.
 ```
 
 ---
@@ -173,7 +207,7 @@ call greet with world.
 - **[GUI Programming](docs/05_gui.md)** - Build desktop apps
 - **[Grammar](docs/07_grammar.md)** - Formal specification
 - **[Errors](docs/08_errors.md)** - When things go wrong
-- **[examples/](examples/)** - 10 working programs
+- **[examples/](examples/)** - 13 working programs
 
 ---
 
@@ -182,12 +216,12 @@ call greet with world.
 Try the examples:
 
 ```bash
-python -m kaynat.main examples/01_hello_world.kaynat
-python -m kaynat.main examples/07_sequence.kaynat
-python -m kaynat.main examples/08_counting.kaynat
+python3 -m kaynat.main examples/01_hello_world.kaynat
+python3 -m kaynat.main examples/11_stdlib_demo.kaynat
+python3 -m kaynat.main examples/06_functions.kaynat
 ```
 
-All 10 work. No failures.
+All 13 examples work perfectly.
 
 ---
 
