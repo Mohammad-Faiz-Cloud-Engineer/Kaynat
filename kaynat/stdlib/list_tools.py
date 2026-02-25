@@ -114,7 +114,7 @@ def list_index_of(lst, item):
 def list_sort(lst, reverse=False):
     """Sort list in place."""
     if not isinstance(lst, KaynatList):
-        raise KaynatTypeError("Sort requires a list")
+        raise KaynatTypeError(f"Sort requires a list, got {type(lst)}")
     
     rev = reverse.value if isinstance(reverse, KaynatBoolean) else reverse
     
