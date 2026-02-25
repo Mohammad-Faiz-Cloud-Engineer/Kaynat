@@ -1,0 +1,35 @@
+begin program.
+
+say Kaynat GUI Calculator Demo.
+say Example shows GUI programming concepts.
+
+say Creating calculator window.
+say Window title is Kaynat Calculator.
+say Window size is 400 by 500 pixels.
+
+say Adding display label for showing numbers.
+say Display shows current value.
+
+say Adding number buttons from 0 to 9.
+say Buttons allow number input.
+
+say Adding operation buttons.
+say Plus for addition.
+say Minus for subtraction.
+say Multiply for multiplication.
+say Divide for division.
+
+say Adding control buttons.
+say C for clear all.
+say CE for clear entry.
+say Equals for calculate result.
+
+say Calculator logic explained.
+say When number button clicked append to display.
+say When operation clicked store value and operation.
+say When equals clicked perform calculation.
+say Display shows the result.
+
+say GUI Calculator concept demonstrated successfully.
+
+end program.

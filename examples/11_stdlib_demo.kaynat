@@ -1,0 +1,30 @@
+begin program.
+
+say Standard Library Demo.
+
+say Math functions.
+set mynum to 16.
+call sqrt with mynum and store as sq.
+say Square root of 16 is, sq.
+
+call factorial with 5 and store as fact.
+say 5 factorial is, fact.
+
+say String functions.
+set myname to kaynat.
+call to_uppercase with myname and store as upper.
+say Uppercase, upper.
+
+call string_length with myname and store as len.
+say Length is, len.
+
+say List functions.
+set items to a list containing 5, 2, 8, 1, 9.
+call list_min with items and store as minval.
+call list_max with items and store as maxval.
+say Min is, minval.
+say Max is, maxval.
+
+say Stdlib demo complete.
+
+end program.

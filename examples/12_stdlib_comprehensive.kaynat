@@ -1,0 +1,46 @@
+begin program.
+
+say Comprehensive Standard Library Test.
+
+say Math Functions.
+call sqrt with 25 and store as sqrtval.
+call pow with 2, 10 and store as powval.
+call factorial with 6 and store as factval.
+call gcd with 48, 18 and store as gcdval.
+call lcm with 12, 15 and store as lcmval.
+call is_prime with 29 and store as primeval.
+say sqrt 25, sqrtval.
+say 2 pow 10, powval.
+say 6 factorial, factval.
+say gcd 48 18, gcdval.
+say lcm 12 15, lcmval.
+say 29 prime, primeval.
+
+say String Functions.
+set myword to programming.
+call to_uppercase with myword and store as upper.
+call string_length with myword and store as slen.
+call reverse_string with myword and store as reversed.
+say uppercase, upper.
+say length, slen.
+say reversed, reversed.
+
+say List Functions.
+set numbers to a list containing 7, 2, 9, 1, 5, 3.
+call list_min with numbers and store as minval.
+call list_max with numbers and store as maxval.
+call list_sum with numbers and store as sumval.
+call list_average with numbers and store as avgval.
+call list_length with numbers and store as lenval.
+say min, minval.
+say max, maxval.
+say sum, sumval.
+say average, avgval.
+say length, lenval.
+
+call list_sort with numbers.
+say sorted, numbers.
+
+say All stdlib functions working perfectly.
+
+end program.
