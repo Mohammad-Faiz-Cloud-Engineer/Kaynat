@@ -1,0 +1,27 @@
+begin program.
+
+say Number sequence demonstration.
+say Counting and arithmetic.
+
+set num to 0.
+say num.
+
+add 1 to num.
+say num.
+
+add 1 to num.
+say num.
+
+add 2 to num.
+say num.
+
+add 3 to num.
+say num.
+
+add 5 to num.
+say num.
+
+add 8 to num.
+say num.
+
+end program.

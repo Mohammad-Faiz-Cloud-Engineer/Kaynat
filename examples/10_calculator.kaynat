@@ -1,0 +1,23 @@
+begin program.
+
+say Welcome to Kaynat Calculator.
+
+set x to 10.
+set y to 5.
+
+say First number is, x.
+say Second number is, y.
+
+set sum to 0.
+add x to sum.
+add y to sum.
+say Sum is, sum.
+
+set difference to 0.
+add x to difference.
+subtract y from difference.
+say Difference is, difference.
+
+say Calculator complete.
+
+end program.

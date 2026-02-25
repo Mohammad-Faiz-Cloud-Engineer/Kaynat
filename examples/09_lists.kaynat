@@ -1,0 +1,14 @@
+begin program.
+
+set nums to a list containing 1, 2, 3, 4, 5.
+say List created.
+
+create a list called names.
+say Empty list created.
+
+say Iterating over list.
+for each num in nums.
+    say Number is, num.
+end.
+
+end program.

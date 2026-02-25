@@ -1,0 +1,26 @@
+begin program.
+
+define a function called greet.
+    say Hello from Kaynat.
+end.
+
+call greet.
+
+define a function called greetperson that takes name.
+    say Hello, name.
+end.
+
+call greetperson with Alice.
+call greetperson with Bob.
+
+define a function called addnumbers that takes x, y.
+    set sum to 0.
+    add x to sum.
+    add y to sum.
+    give back sum.
+end.
+
+set result to 0.
+say Result is, result.
+
+end program.

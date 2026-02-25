@@ -1,0 +1,16 @@
+begin program.
+
+say Counting demonstration.
+say Numbers from 1 to 20.
+
+loop from 1 to 20.
+    say current.
+end.
+
+say Counting from 10 to 20.
+
+loop from 10 to 20.
+    say current.
+end.
+
+end program.

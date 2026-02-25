@@ -1,0 +1,19 @@
+begin program.
+
+set x to 10.
+set y to 3.
+
+say x is, x.
+say y is, y.
+
+add 5 to x.
+say After adding 5, x is, x.
+
+subtract 2 from y.
+say After subtracting 2, y is, y.
+
+set result to 0.
+set result to 5.
+say Result is, result.
+
+end program.

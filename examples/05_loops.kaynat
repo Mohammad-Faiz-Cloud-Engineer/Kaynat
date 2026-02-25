@@ -1,0 +1,27 @@
+begin program.
+
+say Counting with repeat.
+set counter to 0.
+repeat 5 times.
+    say Count is, counter.
+    add 1 to counter.
+end.
+
+say Counting with while.
+set x to 1.
+while x is less than 6 then.
+    say x is, x.
+    add 1 to x.
+end.
+
+say Counting from 1 to 5.
+loop from 1 to 5.
+    say current.
+end.
+
+say Counting from 0 to 10 by 2.
+loop from 0 to 10 stepping by 2.
+    say current.
+end.
+
+end program.

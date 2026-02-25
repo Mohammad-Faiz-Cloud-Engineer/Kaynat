@@ -1,0 +1,6 @@
+begin program.
+
+say Hello, World.
+say Welcome to Kaynat Programming Language.
+
+end program.

@@ -1,0 +1,21 @@
+begin program.
+
+set age to 20.
+
+if age is greater than 18 then.
+    say You are an adult.
+end.
+
+set score to 85.
+
+if score is greater than 90 then.
+    say Grade A.
+otherwise if score is greater than 80 then.
+    say Grade B.
+otherwise if score is greater than 70 then.
+    say Grade C.
+otherwise.
+    say Grade F.
+end.
+
+end program.

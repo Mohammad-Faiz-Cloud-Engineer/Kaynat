@@ -1,0 +1,19 @@
+begin program.
+
+set name to Kaynat.
+set age to 21.
+set price to 9.99.
+set active to true.
+
+say My name is, name.
+say I am, age, years old.
+say The price is, price.
+say Active status is, active.
+
+always set pi as 3.14159.
+say The value of pi is, pi.
+
+change age to 22.
+say Updated age is, age.
+
+end program.
