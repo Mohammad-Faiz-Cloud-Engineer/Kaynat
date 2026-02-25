@@ -61,6 +61,24 @@ class Environment:
         
         raise KaynatNameError(f"Variable '{name}' is not defined")
     
+    def exists(self, name: str) -> bool:
+        """
+        Check if a variable exists.
+        
+        Args:
+            name: Variable name
+            
+        Returns:
+            True if variable exists
+        """
+        if name in self.variables:
+            return True
+        
+        if self.parent:
+            return self.parent.exists(name)
+        
+        return False
+    
     def set(self, name: str, value: Any):
         """
         Set a variable value.
@@ -83,24 +101,6 @@ class Environment:
             return
         
         raise KaynatNameError(f"Variable '{name}' is not defined")
-    
-    def exists(self, name: str) -> bool:
-        """
-        Check if a variable exists.
-        
-        Args:
-            name: Variable name
-            
-        Returns:
-            True if variable exists
-        """
-        if name in self.variables:
-            return True
-        
-        if self.parent:
-            return self.parent.exists(name)
-        
-        return False
     
     def delete(self, name: str):
         """

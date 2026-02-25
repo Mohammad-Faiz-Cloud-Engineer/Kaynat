@@ -427,9 +427,9 @@ class Lexer:
         return Token(TokenType.NUMBER, value, start_line, start_column)
     
     def read_word(self) -> str:
-        """Read a word (letters only)."""
+        """Read a word (letters and underscores)."""
         word = ''
-        while self.current_char() and self.current_char().isalpha():
+        while self.current_char() and (self.current_char().isalpha() or self.current_char() == '_'):
             word += self.current_char()
             self.advance()
         return word.lower()

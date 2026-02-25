@@ -13,6 +13,30 @@ from kaynat.interpreter.runtime_types import *
 from kaynat.errors.error_types import RuntimeError as KaynatRuntimeError, TypeError as KaynatTypeError
 import math
 
+# Import all stdlib modules
+from kaynat.stdlib import math_tools
+from kaynat.stdlib import string_tools
+from kaynat.stdlib import list_tools
+from kaynat.stdlib import file_tools
+from kaynat.stdlib import date_tools
+from kaynat.stdlib import random_tools
+from kaynat.stdlib import network_tools
+from kaynat.stdlib import json_tools
+from kaynat.stdlib import crypto_tools
+from kaynat.stdlib import pattern_tools
+
+# Import DSA modules
+from kaynat.dsa import stack, queue, linked_list, binary_search_tree
+from kaynat.dsa import graph, heap, hash_map, trie
+from kaynat.dsa import sorting, searching
+
+# Import OOP modules
+from kaynat.oop import blueprint, instance, contract
+
+# Import GUI modules
+from kaynat.gui import engine, window, widgets, events
+from kaynat.gui import canvas, dialogs, menu, themes
+
 
 class Interpreter:
     """
@@ -30,8 +54,147 @@ class Interpreter:
     
     def _setup_builtins(self):
         """Setup built-in constants and functions."""
+        # Math constants
         self.global_env.define('pi', KaynatNumber(math.pi), is_constant=True)
         self.global_env.define('e', KaynatNumber(math.e), is_constant=True)
+        self.global_env.define('tau', KaynatNumber(math.tau), is_constant=True)
+        self.global_env.define('infinity', KaynatNumber(math.inf), is_constant=True)
+        
+        # Register all stdlib functions as built-in callables
+        self._register_stdlib_functions()
+    
+    def _register_stdlib_functions(self):
+        """Register all standard library functions."""
+        # Math tools
+        stdlib_functions = {
+            'sqrt': math_tools.sqrt,
+            'abs_value': math_tools.abs_value,
+            'round_number': math_tools.round_number,
+            'ceiling': math_tools.ceiling,
+            'floor': math_tools.floor,
+            'pow': math_tools.power,  # 'power' is a keyword, use 'pow'
+            'logarithm': math_tools.logarithm,
+            'sin': math_tools.sin,
+            'cos': math_tools.cos,
+            'tan': math_tools.tan,
+            'asin': math_tools.asin,
+            'acos': math_tools.acos,
+            'atan': math_tools.atan,
+            'factorial': math_tools.factorial,
+            'gcd': math_tools.gcd,
+            'lcm': math_tools.lcm,
+            'is_prime': math_tools.is_prime,
+            'min_value': math_tools.min_value,
+            'max_value': math_tools.max_value,
+            'clamp': math_tools.clamp,
+            
+            # String tools
+            'to_uppercase': string_tools.to_uppercase,
+            'to_lowercase': string_tools.to_lowercase,
+            'to_titlecase': string_tools.to_titlecase,
+            'trim': string_tools.trim,
+            'trim_left': string_tools.trim_left,
+            'trim_right': string_tools.trim_right,
+            'starts_with': string_tools.starts_with,
+            'ends_with': string_tools.ends_with,
+            'contains': string_tools.contains,
+            'find_position': string_tools.find_position,
+            'replace_text': string_tools.replace_text,
+            'split_string': string_tools.split_string,
+            'join_strings': string_tools.join_strings,
+            'substring': string_tools.substring,
+            'reverse_string': string_tools.reverse_string,
+            'repeat_string': string_tools.repeat_string,
+            'string_length': string_tools.string_length,
+            'is_empty': string_tools.is_empty,
+            'is_numeric': string_tools.is_numeric,
+            'is_alphabetic': string_tools.is_alphabetic,
+            'is_alphanumeric': string_tools.is_alphanumeric,
+            'pad_left': string_tools.pad_left,
+            'pad_right': string_tools.pad_right,
+            'center_string': string_tools.center_string,
+            
+            # List tools
+            'list_append': list_tools.list_append,
+            'list_prepend': list_tools.list_prepend,
+            'list_insert': list_tools.list_insert,
+            'list_remove': list_tools.list_remove,
+            'list_remove_at': list_tools.list_remove_at,
+            'list_get': list_tools.list_get,
+            'list_slice': list_tools.list_slice,
+            'list_length': list_tools.list_length,
+            'list_is_empty': list_tools.list_is_empty,
+            'list_contains': list_tools.list_contains,
+            'list_index_of': list_tools.list_index_of,
+            'list_count': list_tools.list_count,
+            'list_sort': list_tools.list_sort,
+            'list_reverse': list_tools.list_reverse,
+            'list_copy': list_tools.list_copy,
+            'list_clear': list_tools.list_clear,
+            'list_extend': list_tools.list_extend,
+            'list_min': list_tools.list_min,
+            'list_max': list_tools.list_max,
+            'list_sum': list_tools.list_sum,
+            'list_average': list_tools.list_average,
+            
+            # File tools
+            'read_file': file_tools.read_file,
+            'read_lines': file_tools.read_lines,
+            'write_file': file_tools.write_file,
+            'append_file': file_tools.append_file,
+            'file_exists': file_tools.file_exists,
+            'delete_file': file_tools.delete_file,
+            'copy_file': file_tools.copy_file,
+            'move_file': file_tools.move_file,
+            'create_directory': file_tools.create_directory,
+            'delete_directory': file_tools.delete_directory,
+            'directory_exists': file_tools.directory_exists,
+            'list_directory': file_tools.list_directory,
+            
+            # Date tools
+            'current_date': date_tools.current_date,
+            'current_time': date_tools.current_time,
+            'current_timestamp': date_tools.current_timestamp,
+            'format_date': date_tools.format_date,
+            'parse_date': date_tools.parse_date,
+            
+            # Random tools
+            'random_integer': random_tools.random_integer,
+            'random_float': random_tools.random_float,
+            'random_boolean': random_tools.random_boolean,
+            'random_choice': random_tools.random_choice,
+            'shuffle_list': random_tools.shuffle_list,
+            'random_string': random_tools.random_string,
+            
+            # Network tools
+            'fetch_url': network_tools.fetch_url,
+            'is_url_reachable': network_tools.is_url_reachable,
+            
+            # JSON tools
+            'parse_json': json_tools.parse_json,
+            'generate_json': json_tools.generate_json,
+            'format_json': json_tools.format_json,
+            
+            # Crypto tools
+            'hash_sha256': crypto_tools.hash_sha256,
+            'hash_md5': crypto_tools.hash_md5,
+            'generate_token': crypto_tools.generate_token,
+            'encode_base64': crypto_tools.encode_base64,
+            'decode_base64': crypto_tools.decode_base64,
+            
+            # Pattern tools
+            'find_matches': pattern_tools.find_matches,
+            'matches_pattern': pattern_tools.matches_pattern,
+            'replace_pattern': pattern_tools.replace_pattern,
+            'split_by_pattern': pattern_tools.split_by_pattern,
+            'is_valid_email': pattern_tools.is_valid_email,
+            'is_valid_url': pattern_tools.is_valid_url,
+        }
+        
+        # Wrap Python functions as Kaynat built-in functions
+        for name, func in stdlib_functions.items():
+            # Create a wrapper that can be called from Kaynat
+            self.global_env.define(name, KaynatBuiltinFunction(name, func))
     
     def execute(self, source: str) -> Any:
         """
@@ -100,8 +263,12 @@ class Interpreter:
         return KaynatNull()
     
     def visit_IdentifierNode(self, node: IdentifierNode) -> KaynatValue:
-        """Look up a variable."""
-        return self.current_env.get(node.name)
+        """Look up a variable, or treat as string literal if undefined."""
+        if self.current_env.exists(node.name):
+            return self.current_env.get(node.name)
+        else:
+            # Treat undefined identifiers as string literals
+            return KaynatString(node.name)
     
     def visit_ListNode(self, node: ListNode) -> KaynatList:
         """Evaluate a list literal."""
@@ -422,6 +589,35 @@ class Interpreter:
         """Call a function."""
         func = self.current_env.get(node.name)
         
+        # Handle built-in functions
+        if isinstance(func, KaynatBuiltinFunction):
+            # Evaluate arguments
+            args = [self.visit(arg) for arg in node.arguments]
+            
+            try:
+                # Call the Python function
+                result = func.call(*args)
+                # Ensure result is a Kaynat value
+                if not isinstance(result, KaynatValue):
+                    if isinstance(result, bool):
+                        result = KaynatBoolean(result)
+                    elif isinstance(result, (int, float)):
+                        result = KaynatNumber(result)
+                    elif isinstance(result, str):
+                        result = KaynatString(result)
+                    elif isinstance(result, list):
+                        result = KaynatList(result)
+                    elif result is None:
+                        result = KaynatNull()
+                return result
+            except Exception as e:
+                raise KaynatRuntimeError(
+                    f"Error calling built-in function '{node.name}': {str(e)}",
+                    node.line,
+                    node.column
+                )
+        
+        # Handle user-defined functions
         if not isinstance(func, KaynatFunction):
             raise KaynatTypeError(
                 f"'{node.name}' is not a function",

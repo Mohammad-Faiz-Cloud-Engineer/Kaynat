@@ -110,6 +110,23 @@ class KaynatFunction(KaynatValue):
         return f'<function {self.name}>'
 
 
+@dataclass
+class KaynatBuiltinFunction(KaynatValue):
+    """Built-in function value (wraps Python functions)."""
+    
+    def __init__(self, name: str, func: Callable):
+        self.name = name
+        self.func = func
+        super().__init__(self)
+    
+    def to_string(self) -> str:
+        return f'<builtin {self.name}>'
+    
+    def call(self, *args):
+        """Call the underlying Python function."""
+        return self.func(*args)
+
+
 class ReturnValue(Exception):
     """Exception used to implement return statements."""
     
