@@ -513,20 +513,89 @@ class Parser:
         self.expect(TokenType.PERIOD)
         return ReturnNode(value=value, line=token.line, column=token.column)
     
-    def parse_function_call_statement(self) -> FunctionCallNode:
-        """Parse: call function with arg1, arg2."""
+    def parse_function_call_statement(self) -> ASTNode:
+        """Parse: call function with arg1, arg2 [and store as result]."""
         token = self.advance()
         name = self.expect(TokenType.IDENTIFIER).value
         
         arguments = []
         if self.match(TokenType.WITH):
             self.advance()
-            arguments.append(self.parse_expression())
+            # Parse arguments, but stop at "and store"
+            arguments.append(self.parse_function_argument())
             while self.match(TokenType.COMMA):
                 self.advance()
-                arguments.append(self.parse_expression())
+                arguments.append(self.parse_function_argument())
+        
+        # Check for "and store as variable"
+        if self.match(TokenType.AND):
+            self.advance()
+            self.expect(TokenType.STORE)
+            self.expect(TokenType.AS)
+            result_var = self.expect(TokenType.IDENTIFIER).value
+            self.expect(TokenType.PERIOD)
+            
+            # Return a variable declaration node that calls the function
+            return VariableDeclarationNode(
+                name=result_var,
+                value=FunctionCallNode(
+                    name=name,
+                    arguments=arguments,
+                    line=token.line,
+                    column=token.column
+                ),
+                is_constant=False,
+                line=token.line,
+                column=token.column
+            )
         
         self.expect(TokenType.PERIOD)
+        return FunctionCallNode(
+            name=name,
+            arguments=arguments,
+            line=token.line,
+            column=token.column
+        )
+    
+    def parse_function_argument(self) -> ASTNode:
+        """Parse a function argument, stopping at 'and store'."""
+        # In function arguments, identifiers are always variable references
+        token = self.current_token()
+        
+        # Number
+        if self.match(TokenType.NUMBER):
+            self.advance()
+            return NumberNode(value=token.value, line=token.line, column=token.column)
+        
+        # Boolean
+        if self.match(TokenType.BOOLEAN):
+            self.advance()
+            return BooleanNode(value=token.value, line=token.line, column=token.column)
+        
+        # Null
+        if self.match(TokenType.NOTHING):
+            self.advance()
+            return NullNode(line=token.line, column=token.column)
+        
+        # Identifier - always treat as variable reference in function arguments
+        if self.match(TokenType.IDENTIFIER):
+            self.advance()
+            return IdentifierNode(name=token.value, line=token.line, column=token.column)
+        
+        # List literal
+        if self.match(TokenType.A) and self.peek_token().type == TokenType.LIST:
+            self.advance()
+            self.advance()
+            self.expect(TokenType.CONTAINING)
+            elements = []
+            elements.append(self.parse_function_argument())
+            while self.match(TokenType.COMMA):
+                self.advance()
+                elements.append(self.parse_function_argument())
+            return ListNode(elements=elements, line=token.line, column=token.column)
+        
+        # For other expressions, use comparison parsing
+        return self.parse_comparison()
         return FunctionCallNode(
             name=name,
             arguments=arguments,
