@@ -1,0 +1,49 @@
+define a blueprint called animal.
+    it has name.
+    it has sound.
+    
+    to initialize, take name and sound.
+        set my name to name.
+        set my sound to sound.
+    end.
+    
+    to speak, do.
+        say my name, says, my sound.
+    end.
+    
+    to describe, do.
+        say i am an animal named, my name.
+    end.
+end.
+
+define a blueprint called dog.
+    it has name.
+    it has sound.
+    it has breed.
+    
+    to initialize, take name and breed.
+        set my name to name.
+        set my sound to woof.
+        set my breed to breed.
+    end.
+    
+    to speak, do.
+        say my name, the, my breed, says, my sound.
+    end.
+end.
+
+say creating animals.
+create a new animal called cat with fluffy and meow.
+create a new animal called bird with tweety and chirp.
+create a new dog called buddy with rex and goldenretriever.
+
+say animals speaking.
+call speak on cat.
+call speak on bird.
+call speak on buddy.
+
+say animal descriptions.
+call describe on cat.
+call describe on bird.
+
+say oop demo complete.
