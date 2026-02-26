@@ -100,10 +100,20 @@ class Parser:
         if self.match(TokenType.SET, TokenType.LET):
             return self.parse_variable_declaration()
         
-        # Define can be variable or function
+        # Define can be variable, function, or blueprint
         if self.match(TokenType.DEFINE):
-            # Look ahead to see if this is a function definition
-            if self.peek_token().type in (TokenType.A, TokenType.FUNCTION):
+            # Look ahead to see what kind of definition this is
+            next_token = self.peek_token()
+            if next_token.type == TokenType.A:
+                # Could be "define a function" or "define a blueprint"
+                next_next = self.peek_token(2)
+                if next_next.type == TokenType.BLUEPRINT:
+                    return self.parse_class_def()
+                elif next_next.type == TokenType.FUNCTION:
+                    return self.parse_function_def()
+                elif next_next.type == TokenType.CONTRACT:
+                    return self.parse_contract_def()
+            elif next_token.type == TokenType.FUNCTION:
                 return self.parse_function_def()
             # Otherwise it's a variable declaration
             return self.parse_variable_declaration()
@@ -158,6 +168,10 @@ class Parser:
         
         # Function call: call function with args.
         if self.match(TokenType.CALL):
+            # Look ahead to see if this is a method call
+            # Pattern: call method on object with args.
+            if self.peek_token(2).type == TokenType.ON:
+                return self.parse_method_call_statement()
             return self.parse_function_call_statement()
         
         # Break: stop.
@@ -199,8 +213,24 @@ class Parser:
         return None
     
     def parse_variable_declaration(self) -> VariableDeclarationNode:
-        """Parse: set x to 5."""
+        """Parse: set x to 5 OR set my name to value."""
         token = self.advance()
+        
+        # Check for "my" keyword (property assignment in OOP)
+        if self.match(TokenType.MY):
+            self.advance()
+            prop_name = self.expect(TokenType.IDENTIFIER).value
+            self.expect(TokenType.TO)
+            value = self.parse_expression()
+            self.expect(TokenType.PERIOD)
+            # Return as assignment with special name format
+            return AssignmentNode(
+                name=f"my {prop_name}",
+                value=value,
+                line=token.line,
+                column=token.column
+            )
+        
         name = self.expect(TokenType.IDENTIFIER).value
         self.expect(TokenType.TO)
         value = self.parse_expression()
@@ -230,8 +260,23 @@ class Parser:
         )
     
     def parse_assignment(self) -> AssignmentNode:
-        """Parse: change x to 10."""
+        """Parse: change x to 10 OR change my name to value."""
         token = self.advance()
+        
+        # Check for "my" keyword (property assignment in OOP)
+        if self.match(TokenType.MY):
+            self.advance()
+            prop_name = self.expect(TokenType.IDENTIFIER).value
+            self.expect(TokenType.TO)
+            value = self.parse_expression()
+            self.expect(TokenType.PERIOD)
+            return AssignmentNode(
+                name=f"my {prop_name}",
+                value=value,
+                line=token.line,
+                column=token.column
+            )
+        
         name = self.expect(TokenType.IDENTIFIER).value
         self.expect(TokenType.TO)
         value = self.parse_expression()
@@ -249,8 +294,22 @@ class Parser:
         values = []
         
         while not self.match(TokenType.PERIOD):
+            # Check for property access: my property
+            if self.match(TokenType.MY):
+                my_token = self.advance()
+                if self.match(TokenType.IDENTIFIER):
+                    prop_name = self.advance().value
+                    values.append(PropertyAccessNode(
+                        object_name='my',
+                        property_name=prop_name,
+                        line=my_token.line,
+                        column=my_token.column
+                    ))
+                else:
+                    # Just "my" without property
+                    values.append(StringNode(value='my', line=my_token.line, column=my_token.column))
             # Try to parse as expression first for numbers, booleans
-            if self.match(TokenType.NUMBER, TokenType.BOOLEAN, TokenType.NOTHING):
+            elif self.match(TokenType.NUMBER, TokenType.BOOLEAN, TokenType.NOTHING):
                 values.append(self.parse_expression())
             # Identifiers could be variables or string literals
             elif self.match(TokenType.IDENTIFIER):
@@ -632,10 +691,37 @@ class Parser:
         return CommentNode(text="", line=token.line, column=token.column)
     
     def parse_create(self) -> ASTNode:
-        """Parse: create a list called items."""
+        """Parse: create a list called items OR create a new Animal called dog."""
         token = self.advance()
         self.expect(TokenType.A)
         
+        # Check for "new" keyword (OOP instance creation)
+        if self.match(TokenType.NEW):
+            self.advance()
+            class_name = self.expect(TokenType.IDENTIFIER).value
+            self.expect(TokenType.CALLED)
+            variable = self.expect(TokenType.IDENTIFIER).value
+            
+            # Check for constructor arguments
+            arguments = []
+            if self.match(TokenType.WITH):
+                self.advance()
+                arguments.append(self.parse_function_argument())
+                # Handle both comma and "and" as separators
+                while self.match(TokenType.COMMA, TokenType.AND):
+                    self.advance()
+                    arguments.append(self.parse_function_argument())
+            
+            self.expect(TokenType.PERIOD)
+            return CreateInstanceNode(
+                class_name=class_name,
+                arguments=arguments,
+                variable=variable,
+                line=token.line,
+                column=token.column
+            )
+        
+        # List creation
         if self.match(TokenType.LIST):
             self.advance()
             self.expect(TokenType.CALLED)
@@ -647,6 +733,8 @@ class Parser:
                 line=token.line,
                 column=token.column
             )
+        
+        # Map creation
         elif self.match(TokenType.MAP):
             self.advance()
             self.expect(TokenType.CALLED)
@@ -831,13 +919,20 @@ class Parser:
             self.advance()
             return NullNode(line=token.line, column=token.column)
         
-        # Identifier - treat as string literal if it's a simple word
+        # Property access: my property
+        if self.match(TokenType.MY):
+            self.advance()
+            prop_name = self.expect(TokenType.IDENTIFIER).value
+            return PropertyAccessNode(
+                object_name='my',
+                property_name=prop_name,
+                line=token.line,
+                column=token.column
+            )
+        
+        # Identifier - always treat as identifier, interpreter will handle lookup
         if self.match(TokenType.IDENTIFIER):
             self.advance()
-            # Check if this looks like a variable reference or a string literal
-            # If followed by period or comma, it's likely a string literal
-            if self.match(TokenType.PERIOD, TokenType.COMMA):
-                return StringNode(value=token.value, line=token.line, column=token.column)
             return IdentifierNode(name=token.value, line=token.line, column=token.column)
         
         # List literal: a list containing 1, 2, 3
@@ -856,4 +951,202 @@ class Parser:
             f"Unexpected token in expression: {token.type.name}",
             token.line,
             token.column
+        )
+
+    
+    def parse_class_def(self) -> ClassDefNode:
+        """Parse: define a blueprint called Animal."""
+        token = self.advance()  # DEFINE
+        self.expect(TokenType.A)
+        
+        # Check for abstract
+        is_abstract = False
+        if self.match(TokenType.ABSTRACT):
+            self.advance()
+            is_abstract = True
+        
+        self.expect(TokenType.BLUEPRINT)
+        self.expect(TokenType.CALLED)
+        name = self.expect(TokenType.IDENTIFIER).value
+        
+        # Check for inheritance
+        parent = None
+        if self.match(TokenType.EXTENDS):
+            self.advance()
+            parent = self.expect(TokenType.IDENTIFIER).value
+        
+        self.expect(TokenType.PERIOD)
+        
+        # Parse properties and methods
+        properties = []
+        methods = []
+        
+        while not self.match(TokenType.END, TokenType.EOF):
+            # Property: it has name.
+            if self.match(TokenType.IT):
+                self.advance()
+                self.expect(TokenType.HAS)
+                prop_name = self.expect(TokenType.IDENTIFIER).value
+                self.expect(TokenType.PERIOD)
+                properties.append(prop_name)
+            
+            # Method: to methodname, do. ... end.
+            elif self.match(TokenType.TO):
+                method = self.parse_method()
+                methods.append(method)
+            
+            else:
+                break
+        
+        self.expect(TokenType.END)
+        self.expect(TokenType.PERIOD)
+        
+        return ClassDefNode(
+            name=name,
+            parent=parent,
+            properties=properties,
+            methods=methods,
+            is_abstract=is_abstract,
+            line=token.line,
+            column=token.column
+        )
+    
+    def parse_method(self) -> FunctionDefNode:
+        """Parse: to methodname, do. ... end."""
+        token = self.advance()  # TO
+        
+        # Method name can be an identifier or special keywords like "initialize"
+        if self.match(TokenType.IDENTIFIER):
+            name = self.advance().value
+        elif self.match(TokenType.INITIALIZE):
+            name = 'initialize'
+            self.advance()
+        else:
+            raise ParserError(
+                f"Expected method name, got {self.current_token().type.name}",
+                self.current_token().line,
+                self.current_token().column
+            )
+        
+        parameters = []
+        # Check for parameters: to methodname, take x, y OR to methodname, take x and y.
+        if self.match(TokenType.COMMA):
+            self.advance()
+            if self.match(TokenType.TAKE):
+                self.advance()
+                param_token = self.current_token()
+                if self.match(TokenType.IDENTIFIER):
+                    parameters.append(self.advance().value)
+                
+                # Handle both comma and "and" as separators
+                while self.match(TokenType.COMMA, TokenType.AND):
+                    self.advance()
+                    param_token = self.current_token()
+                    if self.match(TokenType.IDENTIFIER):
+                        parameters.append(self.advance().value)
+        
+        # Expect "do" or just period
+        if self.match(TokenType.COMMA):
+            self.advance()
+        if self.match(TokenType.DO):
+            self.advance()
+        self.expect(TokenType.PERIOD)
+        
+        # Parse method body
+        body = []
+        while not self.match(TokenType.END, TokenType.EOF):
+            stmt = self.parse_statement()
+            if stmt:
+                body.append(stmt)
+        
+        self.expect(TokenType.END)
+        self.expect(TokenType.PERIOD)
+        
+        return FunctionDefNode(
+            name=name,
+            parameters=parameters,
+            body=body,
+            line=token.line,
+            column=token.column
+        )
+    
+    def parse_contract_def(self) -> 'ContractDefNode':
+        """Parse: define a contract called Speakable."""
+        token = self.advance()  # DEFINE
+        self.expect(TokenType.A)
+        self.expect(TokenType.CONTRACT)
+        self.expect(TokenType.CALLED)
+        name = self.expect(TokenType.IDENTIFIER).value
+        self.expect(TokenType.PERIOD)
+        
+        # Parse required methods
+        methods = []
+        while not self.match(TokenType.END, TokenType.EOF):
+            if self.match(TokenType.IT):
+                self.advance()
+                self.expect(TokenType.REQUIRES)
+                method_name = self.expect(TokenType.IDENTIFIER).value
+                self.expect(TokenType.PERIOD)
+                methods.append(method_name)
+            else:
+                break
+        
+        self.expect(TokenType.END)
+        self.expect(TokenType.PERIOD)
+        
+        # Create a simple node for contracts
+        from kaynat.parser.nodes import ContractDefNode
+        return ContractDefNode(
+            name=name,
+            required_methods=methods,
+            line=token.line,
+            column=token.column
+        )
+
+    
+    def parse_method_call_statement(self) -> ASTNode:
+        """Parse: call method on object with arg1, arg2 [and store as result]."""
+        token = self.advance()  # CALL
+        method_name = self.expect(TokenType.IDENTIFIER).value
+        self.expect(TokenType.ON)
+        object_name = self.expect(TokenType.IDENTIFIER).value
+        
+        arguments = []
+        if self.match(TokenType.WITH):
+            self.advance()
+            arguments.append(self.parse_function_argument())
+            while self.match(TokenType.COMMA):
+                self.advance()
+                arguments.append(self.parse_function_argument())
+        
+        # Check for "and store as variable"
+        if self.match(TokenType.AND):
+            self.advance()
+            self.expect(TokenType.STORE)
+            self.expect(TokenType.AS)
+            result_var = self.expect(TokenType.IDENTIFIER).value
+            self.expect(TokenType.PERIOD)
+            
+            # Return a variable declaration node that calls the method
+            return VariableDeclarationNode(
+                name=result_var,
+                value=MethodCallNode(
+                    object_name=object_name,
+                    method_name=method_name,
+                    arguments=arguments,
+                    line=token.line,
+                    column=token.column
+                ),
+                is_constant=False,
+                line=token.line,
+                column=token.column
+            )
+        
+        self.expect(TokenType.PERIOD)
+        return MethodCallNode(
+            object_name=object_name,
+            method_name=method_name,
+            arguments=arguments,
+            line=token.line,
+            column=token.column
         )

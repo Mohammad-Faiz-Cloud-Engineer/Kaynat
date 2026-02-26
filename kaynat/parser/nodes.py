@@ -347,3 +347,13 @@ class CommentNode(ASTNode):
     text: str
     line: int = 0
     column: int = 0
+
+
+
+@dataclass
+class ContractDefNode(ASTNode):
+    """Contract/interface definition."""
+    name: str
+    required_methods: List[str]
+    line: int = 0
+    column: int = 0
