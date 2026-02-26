@@ -25,18 +25,6 @@ from kaynat.stdlib import json_tools
 from kaynat.stdlib import crypto_tools
 from kaynat.stdlib import pattern_tools
 
-# Import DSA modules
-from kaynat.dsa import stack, queue, linked_list, binary_search_tree
-from kaynat.dsa import graph, heap, hash_map, trie
-from kaynat.dsa import sorting, searching
-
-# Import OOP modules
-from kaynat.oop import blueprint, instance, contract
-
-# Import GUI modules
-from kaynat.gui import engine, window, widgets, events
-from kaynat.gui import canvas, dialogs, menu, themes
-
 
 class Interpreter:
     """
@@ -265,7 +253,8 @@ class Interpreter:
     def visit_IdentifierNode(self, node: IdentifierNode) -> KaynatValue:
         """Look up a variable, or treat as string literal if undefined."""
         if self.current_env.exists(node.name):
-            return self.current_env.get(node.name)
+            value = self.current_env.get(node.name)
+            return value
         else:
             # Treat undefined identifiers as string literals
             return KaynatString(node.name)
@@ -291,8 +280,21 @@ class Interpreter:
         return None
     
     def visit_AssignmentNode(self, node: AssignmentNode) -> None:
-        """Execute variable assignment."""
+        """Execute variable assignment or property assignment."""
         value = self.visit(node.value)
+        
+        # Check if this is a property assignment (my property or object.property)
+        if ' ' in node.name:
+            parts = node.name.split(' ', 1)
+            if parts[0] in ('my', 'this'):
+                # Property assignment: set my name to value
+                from kaynat.oop.instance import Instance
+                obj = self.current_env.get(parts[0])
+                if isinstance(obj, Instance):
+                    obj.properties[parts[1]] = value
+                    return None
+        
+        # Regular variable assignment
         self.current_env.set(node.name, value)
         return None
     
@@ -696,4 +698,206 @@ class Interpreter:
     
     def visit_CommentNode(self, node: CommentNode) -> None:
         """Comments do nothing at runtime."""
+        return None
+
+    
+    def visit_ClassDefNode(self, node: ClassDefNode) -> None:
+        """Define a class/blueprint."""
+        from kaynat.oop.blueprint import Blueprint
+        
+        # Get parent class if exists
+        parent_class = None
+        if node.parent:
+            parent_val = self.current_env.get(node.parent)
+            if isinstance(parent_val, Blueprint):
+                parent_class = parent_val
+            else:
+                raise KaynatTypeError(
+                    f"'{node.parent}' is not a blueprint",
+                    node.line,
+                    node.column
+                )
+        
+        # Create blueprint
+        blueprint = Blueprint(
+            name=node.name,
+            properties=node.properties,
+            methods={},
+            parent=parent_class,
+            is_abstract=node.is_abstract
+        )
+        
+        # Add methods to blueprint
+        for method in node.methods:
+            # Store method as a function definition
+            blueprint.methods[method.name] = method
+        
+        # Register blueprint in environment
+        self.current_env.define(node.name, blueprint)
+        return None
+    
+    def visit_CreateInstanceNode(self, node: CreateInstanceNode) -> None:
+        """Create an instance of a class."""
+        from kaynat.oop.blueprint import Blueprint
+        from kaynat.oop.instance import Instance
+        
+        # Get the blueprint
+        blueprint_val = self.current_env.get(node.class_name)
+        if not isinstance(blueprint_val, Blueprint):
+            raise KaynatTypeError(
+                f"'{node.class_name}' is not a blueprint",
+                node.line,
+                node.column
+            )
+        
+        # Check if blueprint is abstract
+        if blueprint_val.is_abstract:
+            raise KaynatRuntimeError(
+                f"Cannot create instance of abstract blueprint '{node.class_name}'",
+                node.line,
+                node.column
+            )
+        
+        # Create instance WITHOUT calling __init__ (we'll handle initialize ourselves)
+        instance = Instance.__new__(Instance)
+        instance.blueprint = blueprint_val
+        instance.properties = {}
+        
+        # Initialize properties
+        for prop in blueprint_val.properties:
+            instance.properties[prop] = KaynatNull()
+        
+        # Evaluate constructor arguments
+        args = [self.visit(arg) for arg in node.arguments]
+        
+        # Call initialize method if exists
+        if 'initialize' in blueprint_val.methods:
+            init_method = blueprint_val.methods['initialize']
+            
+            # Check argument count
+            if len(args) != len(init_method.parameters):
+                raise KaynatRuntimeError(
+                    f"Constructor expects {len(init_method.parameters)} arguments, got {len(args)}",
+                    node.line,
+                    node.column
+                )
+            
+            # Create environment for constructor
+            init_env = Environment(self.current_env)
+            init_env.define('my', instance)  # 'my' refers to current instance
+            init_env.define('this', instance)  # 'this' also refers to current instance
+            
+            for param, arg in zip(init_method.parameters, args):
+                init_env.define(param, arg)
+            
+            # Execute constructor
+            prev_env = self.current_env
+            self.current_env = init_env
+            
+            try:
+                for stmt in init_method.body:
+                    self.visit(stmt)
+            except ReturnValue:
+                pass  # Constructors don't return values
+            finally:
+                self.current_env = prev_env
+        
+        # Store instance in variable
+        self.current_env.define(node.variable, instance)
+        return None
+    
+    def visit_MethodCallNode(self, node: MethodCallNode) -> KaynatValue:
+        """Call a method on an object."""
+        from kaynat.oop.instance import Instance
+        
+        # Get the object
+        obj = self.current_env.get(node.object_name)
+        if not isinstance(obj, Instance):
+            raise KaynatTypeError(
+                f"'{node.object_name}' is not an object instance",
+                node.line,
+                node.column
+            )
+        
+        # Get the method from blueprint
+        if node.method_name not in obj.blueprint.methods:
+            raise KaynatRuntimeError(
+                f"Object of type '{obj.blueprint.name}' has no method '{node.method_name}'",
+                node.line,
+                node.column
+            )
+        
+        method = obj.blueprint.methods[node.method_name]
+        
+        # Evaluate arguments
+        args = [self.visit(arg) for arg in node.arguments]
+        
+        # Check argument count
+        if len(args) != len(method.parameters):
+            raise KaynatRuntimeError(
+                f"Method '{node.method_name}' expects {len(method.parameters)} arguments, got {len(args)}",
+                node.line,
+                node.column
+            )
+        
+        # Create environment for method
+        method_env = Environment(self.current_env)
+        method_env.define('my', obj)  # 'my' refers to current instance
+        method_env.define('this', obj)  # 'this' also refers to current instance
+        
+        for param, arg in zip(method.parameters, args):
+            method_env.define(param, arg)
+        
+        # Execute method
+        prev_env = self.current_env
+        self.current_env = method_env
+        
+        try:
+            for stmt in method.body:
+                self.visit(stmt)
+            result = KaynatNull()
+        except ReturnValue as ret:
+            result = ret.value
+        finally:
+            self.current_env = prev_env
+        
+        return result
+    
+    def visit_PropertyAccessNode(self, node: PropertyAccessNode) -> KaynatValue:
+        """Access a property on an object."""
+        from kaynat.oop.instance import Instance
+        
+        # Handle 'my' keyword
+        if node.object_name == 'my' or node.object_name == 'this':
+            obj = self.current_env.get(node.object_name)
+        else:
+            obj = self.current_env.get(node.object_name)
+        
+        if not isinstance(obj, Instance):
+            raise KaynatTypeError(
+                f"'{node.object_name}' is not an object instance",
+                node.line,
+                node.column
+            )
+        
+        # Get property value
+        if node.property_name not in obj.properties:
+            raise KaynatRuntimeError(
+                f"Object of type '{obj.blueprint.name}' has no property '{node.property_name}'",
+                node.line,
+                node.column
+            )
+        
+        return obj.properties[node.property_name]
+    
+    def visit_ContractDefNode(self, node: 'ContractDefNode') -> None:
+        """Define a contract/interface."""
+        from kaynat.oop.contract import Contract
+        
+        contract = Contract(
+            name=node.name,
+            required_methods=node.required_methods
+        )
+        
+        self.current_env.define(node.name, contract)
         return None
